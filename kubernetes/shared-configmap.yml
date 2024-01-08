@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: shared-configmap
+data:
+  POSTGRES_DB: postgresdb
+  POSTGRES_HOST: postgresdb-service
+  POSTGRES_PORT: "5432"

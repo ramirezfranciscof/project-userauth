@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userauth-restapi
+  labels:
+    app: userauth-restapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: userauth-restapi
+  template:
+    metadata:
+      labels:
+        app: userauth-restapi
+    spec:
+      containers:
+      - name: userauth-restapi
+        image: image_userauth:v0.1.0
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8000
+        env:
+        - name: DEPLOYMENT_TYPE
+          value: PROD
+        - name: POSTGRES_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: shared-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: shared-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: shared-configmap
+              key: POSTGRES_HOST
+        - name: POSTGRES_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: shared-configmap
+              key: POSTGRES_PORT
+        - name: POSTGRES_DBNAME
+          valueFrom:
+            configMapKeyRef:
+              name: shared-configmap
+              key: POSTGRES_DB
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: userauth-restapi-service
+spec:
+  selector:
+    app: userauth-restapi
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+      nodePort: 30000

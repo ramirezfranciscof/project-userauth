@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  labels:
+    app: postgresdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresdb
+  template:
+    metadata:
+      labels:
+        app: postgresdb
+    spec:
+      containers:
+      - name: postgresdb
+        image: postgres
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: shared-configmap
+              key: POSTGRES_DB
+        envFrom:
+        - secretRef:
+            name: shared-secrets
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgresdb
+      volumes:
+      - name: postgresdb
+        persistentVolumeClaim:
+          claimName: postgres-pv-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresdb-service
+  labels:
+    app: postgresdb
+spec:
+  selector:
+    app: postgresdb
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432

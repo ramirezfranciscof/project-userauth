@@ -1,0 +1,56 @@
+version: '3.4'
+
+services:
+
+  pdb:
+    # Checkout https://hub.docker.com/_/postgres for more info
+    hostname: "pdb"
+    container_name: "pdb"
+    image: "postgres:latest"
+    #image: "postgres:alpine"
+    environment:
+      PGUSER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: test_db
+    ports:
+      - 5432:5432
+    networks:
+      - "fakenet"
+        #volumes:
+        #  - "../dbase:/var/lib/postgresql/data" # This is for data persistence
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  userauth:
+    hostname: "userauth"
+    container_name: "userauth"
+    image: "image_userauth_dev:v0.1.0"
+    expose:
+      - "8888"
+      - "8000"
+    ports: # local:container
+      - 8888:8888
+      - 8000:8000
+    depends_on:
+      pdb:
+        condition: service_healthy
+    networks:
+      - "fakenet"
+    #volumes:
+    #  - "../..:/home/root/app" # This is for data persistence
+    environment:
+      # LC_ALL: "en_US.UTF-8"
+      # LANG: "en_US.UTF-8"
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: pdb
+      POSTGRES_PORT: 5432
+      POSTGRES_DBNAME: test_db
+
+networks:
+  fakenet:
+    driver: bridge
